@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Data History</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pagination.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-car"></i>
+                <span>IoT Mobility</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+                <li class="active"><a href="history.html"><i class="fa-solid fa-clock-rotate-left"></i> History</a></li>
+                <li><a href="#settings"><i class="fa-solid fa-gear"></i> Settings</a></li>
+            </ul>
+            <div class="status-indicator">
+                <div class="indicator-dot pulse"></div>
+                <span>System Online</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1>Vehicle Data History</h1>
+                <div class="date-time" id="currentDateTime">--:--</div>
+            </header>
+
+            <!-- Filter Controls -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-filter"></i> Filter by Date/Time</h3>
+                </div>
+                <div class="filter-controls" style="display: flex; gap: 1rem; align-items: center; margin-top: 0.5rem;">
+                    <label for="startPicker" style="color: var(--text-secondary);">From:</label>
+                    <input type="datetime-local" id="startPicker" class="control-select" />
+                    <label for="endPicker" style="color: var(--text-secondary);">To:</label>
+                    <input type="datetime-local" id="endPicker" class="control-select" />
+                    <button id="applyRange" class="page-btn"><i class="fa-solid fa-magnifying-glass"></i> Apply</button>
+                </div>
+            </div>
+
+            <!-- History Table -->
+            <div class="card history-card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-list"></i> Data History</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Temp (°C)</th>
+                                <th>Humidity (%)</th>
+                                <th>Lat / Lon</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyPageTableBody">
+                            <!-- Rows will be added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div class="pagination-controls">
+                    <div class="control-group">
+                        <label for="itemsPerPageSelect">Items per page:</label>
+                        <select id="itemsPerPageSelect" class="control-select">
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <div class="pagination-nav">
+                        <button id="prevPage" class="page-btn" disabled><i class="fa-solid fa-angle-left"></i>
+                            Prev</button>
+                        <div id="pageNumbers" class="page-numbers"></div>
+                        <button id="nextPage" class="page-btn" disabled>Next <i
+                                class="fa-solid fa-angle-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="history.js"></script>
+</body>
+
+</html>
