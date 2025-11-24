@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Vehicle System | Connected Mobility</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-car-connected"></i>
+                <span>IoT Mobility</span>
+            </div>
+            <ul class="nav-links">
+                <li class="active"><a href="#dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="#history"><i class="fa-solid fa-clock-rotate-left"></i> History</a></li>
+                <li><a href="#settings"><i class="fa-solid fa-gear"></i> Settings</a></li>
+            </ul>
+            <div class="status-indicator">
+                <div class="indicator-dot pulse"></div>
+                <span>System Online</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1>Vehicle Monitoring System</h1>
+                <div class="date-time" id="currentDateTime">--:--</div>
+            </header>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+                
+                <!-- Real-time Gauges -->
+                <div class="card gauge-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-temperature-half"></i> Temperature</h3>
+                    </div>
+                    <div class="gauge-container">
+                        <div class="gauge" id="tempGauge">
+                            <div class="gauge-body">
+                                <div class="gauge-fill" id="tempFill"></div>
+                                <div class="gauge-cover"></div>
+                            </div>
+                            <div class="gauge-value" id="tempValue">--°C</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card gauge-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-droplet"></i> Humidity</h3>
+                    </div>
+                    <div class="gauge-container">
+                        <div class="gauge" id="humidityGauge">
+                            <div class="gauge-body">
+                                <div class="gauge-fill" id="humidityFill"></div>
+                                <div class="gauge-cover"></div>
+                            </div>
+                            <div class="gauge-value" id="humidityValue">--%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LED Status Panel -->
+                <div class="card status-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-traffic-light"></i> System Status</h3>
+                    </div>
+                    <div class="led-container">
+                        <div class="led-item">
+                            <div class="led red" id="ledRed"></div>
+                            <span>CRITICAL</span>
+                        </div>
+                        <div class="led-item">
+                            <div class="led orange" id="ledOrange"></div>
+                            <span>WARNING</span>
+                        </div>
+                        <div class="led-item">
+                            <div class="led blue active" id="ledBlue"></div> <!-- Default active -->
+                            <span>NORMAL</span>
+                        </div>
+                    </div>
+                    <div class="alert-box" id="alertBox">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span id="alertMessage">System operating normally.</span>
+                    </div>
+                </div>
+
+                <!-- Map Section -->
+                <div class="card map-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-map-location-dot"></i> Live Tracking</h3>
+                        <div class="coords">
+                            <span id="lat">Lat: --</span>
+                            <span id="lon">Lon: --</span>
+                            <span id="alt">Alt: --m</span>
+                        </div>
+                    </div>
+                    <div id="map"></div>
+                </div>
+
+                <!-- Statistics Panel -->
+                <div class="card stats-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Session Stats</h3>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Temp</span>
+                            <span class="stat-value" id="avgTemp">--°C</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Humidity</span>
+                            <span class="stat-value" id="avgHum">--%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Risk Score</span>
+                            <span class="stat-value" id="riskScore">--</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Incidents</span>
+                            <span class="stat-value" id="incidentCount">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Table -->
+                <div class="card history-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-list"></i> Data History</h3>
+                        <button class="btn-icon" id="exportBtn" title="Export Data"><i class="fa-solid fa-download"></i></button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Temp (°C)</th>
+                                    <th>Humidity (%)</th>
+                                    <th>Lat / Lon</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <!-- Rows will be added dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <!-- Main App -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
