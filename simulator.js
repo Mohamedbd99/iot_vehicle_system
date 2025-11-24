@@ -23,8 +23,10 @@ const SENSOR_URLS = {
 const app = initializeApp(FIREBASE_CONFIG);
 const db = getDatabase(app);
 
-console.log("Starting IoT Vehicle Simulator...");
-console.log("Connected to Firebase: iot-pro-35cd1");
+console.log("🚀 Starting IoT Vehicle Simulator...");
+console.log("📡 Connected to Firebase: iot-pro-35cd1");
+console.log("⏱️  Pushing data every 2 seconds...");
+console.log("Press Ctrl+C to stop\n");
 
 // --- State ---
 let currentData = {
@@ -37,13 +39,21 @@ let currentData = {
 async function fetchAndPushData() {
     try {
         // 1. Fetch Sensor Data (Simulating the ESP32 connection)
-        const [tempRes, humRes] = await Promise.all([
-            fetch(SENSOR_URLS.temp),
-            fetch(SENSOR_URLS.humidity)
-        ]);
+        let tempVal, humVal;
+        try {
+            const [tempRes, humRes] = await Promise.all([
+                fetch(SENSOR_URLS.temp),
+                fetch(SENSOR_URLS.humidity)
+            ]);
 
-        const tempVal = await tempRes.json();
-        const humVal = await humRes.json();
+            tempVal = await tempRes.json();
+            humVal = await humRes.json();
+        } catch (sensorError) {
+            console.warn("⚠️ Could not fetch sensor data, using simulated values:", sensorError.message);
+            // Use simulated/random values if sensor fetch fails
+            tempVal = 20 + Math.random() * 30; // 20-50°C
+            humVal = 40 + Math.random() * 40;   // 40-80%
+        }
 
         // 2. Simulate GPS Movement (Random Walk)
         // Move slightly (~10-20 meters)
@@ -69,7 +79,9 @@ async function fetchAndPushData() {
         console.log(`[${new Date().toLocaleTimeString()}] Data Pushed: Temp=${packet.temperature}°C, Hum=${packet.humidity}%, Lat=${packet.latitude}`);
 
     } catch (error) {
-        console.error("Error in simulation loop:", error);
+        console.error("❌ Error in simulation loop:", error);
+        console.error("Stack:", error.stack);
+        // Continue running even if one push fails
     }
 }
 
