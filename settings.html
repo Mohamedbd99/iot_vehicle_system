@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - IoT Vehicle System</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pagination.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-car"></i>
+                <span>IoT Mobility</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="history.html"><i class="fa-solid fa-clock-rotate-left"></i> History</a></li>
+                <li class="active"><a href="settings.html"><i class="fa-solid fa-gear"></i> Settings</a></li>
+            </ul>
+            <div class="status-indicator">
+                <div class="indicator-dot pulse"></div>
+                <span>System Online</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1>Settings</h1>
+                <div class="date-time" id="currentDateTime">--:--</div>
+            </header>
+
+            <!-- Settings Content -->
+            <div class="settings-container">
+                <!-- Theme Settings Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-palette"></i> Appearance</h3>
+                    </div>
+                    <div class="settings-section">
+                        <h4>Theme Mode</h4>
+                        <p class="setting-description">Choose how the application looks</p>
+                        <div class="theme-options">
+                            <div class="theme-option" data-theme="light">
+                                <div class="theme-preview light-preview">
+                                    <i class="fa-solid fa-sun"></i>
+                                </div>
+                                <span>Light</span>
+                            </div>
+                            <div class="theme-option" data-theme="dark">
+                                <div class="theme-preview dark-preview">
+                                    <i class="fa-solid fa-moon"></i>
+                                </div>
+                                <span>Dark</span>
+                            </div>
+                            <div class="theme-option" data-theme="system">
+                                <div class="theme-preview system-preview">
+                                    <i class="fa-solid fa-desktop"></i>
+                                </div>
+                                <span>System</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- About Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-circle-info"></i> About</h3>
+                    </div>
+                    <div class="settings-section">
+                        <div class="about-info">
+                            <p><strong>IoT Vehicle Monitoring System</strong></p>
+                            <p>Version 1.0.0</p>
+                            <p>Real-time vehicle telemetry with AI-powered risk prediction</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="settings.js"></script>
+</body>
+
+</html>
