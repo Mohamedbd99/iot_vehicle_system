@@ -1,6 +1,6 @@
 // history.js – fetches vehicle history from Firebase with ONE-TIME queries (no live streaming)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getDatabase, ref, query, orderByChild, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -87,7 +87,7 @@ function renderPaginationControls(totalPages) {
 async function fetchLastHour() {
     const now = Date.now();
     const oneHourAgo = now - 60 * 60 * 1000;
-    const historyRef = query(ref(db, 'vehicle_history'), orderByChild('timestamp'));
+    const historyRef = ref(db, 'vehicle_history');
 
     try {
         const snap = await get(historyRef);
@@ -111,7 +111,7 @@ async function fetchLastHour() {
 }
 
 async function fetchRange(startMs, endMs) {
-    const historyRef = query(ref(db, 'vehicle_history'), orderByChild('timestamp'));
+    const historyRef = ref(db, 'vehicle_history');
 
     try {
         const snap = await get(historyRef);
