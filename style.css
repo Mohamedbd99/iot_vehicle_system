@@ -178,6 +178,43 @@ body {
     box-shadow: var(--shadow-md);
 }
 
+.led-container {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 1.5rem;
+}
+
+.led-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.led {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #334155;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s;
+}
+
+.led.red.active {
+    background-color: var(--danger);
+    box-shadow: 0 0 15px var(--danger);
+}
+
+.led.orange.active {
+    background-color: var(--warning);
+    box-shadow: 0 0 15px var(--warning);
+}
+
+.led.blue.active {
+    background-color: var(--info);
+    box-shadow: 0 0 15px var(--info);
+}
+
 /* ... (headers) ... */
 
 /* Map */
