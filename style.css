@@ -394,3 +394,103 @@ body {
         flex-direction: column;
     }
 }
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.card-header h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Gauges */
+.gauge-card {
+    grid-column: span 1;
+}
+
+.gauge-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.gauge {
+    position: relative;
+    width: 150px;
+    height: 75px;
+    /* Half circle */
+    overflow: hidden;
+}
+
+.gauge-body {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.gauge-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 150px;
+    height: 150px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+    transform: rotate(0deg);
+    /* Initial state */
+    transform-origin: center;
+    transition: transform 1s ease-out, background-color 0.5s;
+}
+
+.gauge-cover {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 120px;
+    height: 120px;
+    background: var(--bg-card);
+    border-radius: 50%;
+    z-index: 2;
+}
+
+.gauge-value {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    z-index: 3;
+}
+
+/* Status Panel */
+.status-card {
+    grid-column: span 2;
+}
+
+.alert-box {
+    background: rgba(59, 130, 246, 0.1);
+    border-left: 4px solid var(--info);
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+}
