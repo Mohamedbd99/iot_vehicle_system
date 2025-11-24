@@ -28,28 +28,36 @@ function updateActiveOption(theme) {
     });
 }
 
-// Theme option click handlers
-document.querySelectorAll('.theme-option').forEach(option => {
-    option.addEventListener('click', () => {
-        const theme = option.dataset.theme;
-        applyTheme(theme);
-        updateActiveOption(theme);
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Theme option click handlers
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const theme = option.dataset.theme;
+            applyTheme(theme);
+            updateActiveOption(theme);
+        });
     });
+
+    // Initialize theme and update active option
+    initTheme();
+
+    // Update current time display
+    const updateTime = () => {
+        const now = new Date();
+        const timeElement = document.getElementById('currentDateTime');
+        if (timeElement) {
+            timeElement.textContent = now.toLocaleTimeString();
+        }
+    };
+    updateTime();
+    setInterval(updateTime, 1000);
 });
 
-// Listen for system theme changes
+// Listen for system theme changes (can be set up immediately)
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
     const currentTheme = localStorage.getItem('theme');
     if (currentTheme === 'system') {
         applyTheme('system');
     }
 });
-
-// Update current time display
-setInterval(() => {
-    const now = new Date();
-    document.getElementById('currentDateTime').textContent = now.toLocaleTimeString();
-}, 1000);
-
-// Initialize on page load
-initTheme();

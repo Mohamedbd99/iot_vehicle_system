@@ -1,8 +1,10 @@
 :root {
-    --bg-dark: #0f172a;
-    --bg-card: #1e293b;
-    --bg-card-glass: rgba(30, 41, 59, 0.7);
-    --text-primary: #f8fafc;
+    /* These will be overridden by themes.css */
+    --bg-primary: #0a0e27;
+    --bg-secondary: #151932;
+    --bg-card: rgba(21, 25, 50, 0.6);
+    --bg-card-glass: rgba(21, 25, 50, 0.7);
+    --text-primary: #e2e8f0;
     --text-secondary: #94a3b8;
     --accent-primary: #3b82f6;
     --accent-secondary: #8b5cf6;
@@ -10,6 +12,8 @@
     --warning: #f59e0b;
     --danger: #ef4444;
     --info: #3b82f6;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --shadow: rgba(0, 0, 0, 0.3);
 
     --font-main: 'Outfit', sans-serif;
 
@@ -27,7 +31,7 @@
 
 body {
     font-family: var(--font-main);
-    background-color: var(--bg-dark);
+    background-color: var(--bg-primary);
     color: var(--text-primary);
     height: 100vh;
     overflow: hidden;
@@ -41,11 +45,11 @@ body {
 /* Sidebar */
 .sidebar {
     width: 260px;
-    background-color: var(--bg-card);
+    background-color: var(--bg-secondary);
     display: flex;
     flex-direction: column;
     padding: 1.5rem;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-right: 1px solid var(--border-color);
 }
 
 .logo {
@@ -131,7 +135,7 @@ body {
     flex: 1;
     padding: 2rem;
     overflow-y: auto;
-    background: radial-gradient(circle at top right, #1e293b 0%, #0f172a 40%);
+    background: var(--bg-primary);
 }
 
 .top-bar {
@@ -144,15 +148,17 @@ body {
 .top-bar h1 {
     font-size: 1.75rem;
     font-weight: 600;
+    color: var(--text-primary);
 }
 
 .date-time {
     font-family: monospace;
     font-size: 1.1rem;
     color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-card);
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
 }
 
 /* Dashboard Grid */
@@ -168,9 +174,9 @@ body {
 }
 
 .card {
-    background-color: var(--bg-card-glass);
+    background-color: var(--bg-card);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
     border-radius: 1rem;
     padding: 1.25rem;
     display: flex;
@@ -191,11 +197,19 @@ body {
     gap: 0.5rem;
 }
 
+.led-item span {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .led {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background-color: #334155;
+    background-color: var(--bg-secondary);
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
     transition: all 0.3s;
 }
@@ -251,12 +265,13 @@ body {
 }
 
 .stat-item {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-secondary);
     padding: 1rem;
     border-radius: 0.5rem;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    border: 1px solid var(--border-color);
 }
 
 .stat-label {
@@ -292,19 +307,20 @@ body {
     padding: 0.75rem 1rem;
     color: var(--text-secondary);
     font-weight: 500;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
-    background-color: var(--bg-card);
+    background-color: var(--bg-secondary);
 }
 
 .data-table td {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
 }
 
 .data-table tr:hover {
-    background-color: rgba(255, 255, 255, 0.02);
+    background-color: var(--bg-secondary);
 }
 
 .status-badge {
@@ -335,16 +351,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--border-color);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--text-secondary);
 }
 
 /* Responsive */
@@ -438,7 +454,7 @@ body {
     left: 0;
     width: 150px;
     height: 150px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
     border-radius: 50%;
 }
 
@@ -463,7 +479,7 @@ body {
     left: 15px;
     width: 120px;
     height: 120px;
-    background: var(--bg-card);
+    background: var(--bg-primary);
     border-radius: 50%;
     z-index: 2;
 }
@@ -476,6 +492,7 @@ body {
     text-align: center;
     font-size: 1.5rem;
     font-weight: 700;
+    color: var(--text-primary);
     z-index: 3;
 }
 
@@ -493,4 +510,20 @@ body {
     align-items: center;
     gap: 0.75rem;
     font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+/* Filter Controls */
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-controls label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    white-space: nowrap;
 }

@@ -3,7 +3,7 @@
     display: flex;
     gap: 1.5rem;
     padding: 1rem 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid var(--border-color);
     margin-top: 1rem;
     align-items: center;
     justify-content: space-between;
@@ -23,10 +23,10 @@
 
 .control-select {
     padding: 0.5rem 0.75rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 0.5rem;
-    color: black;
+    color: var(--text-primary);
     font-family: var(--font-main);
     font-size: 0.875rem;
     cursor: pointer;
@@ -34,7 +34,7 @@
 }
 
 .control-select:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--bg-card);
     border-color: var(--accent-primary);
 }
 
@@ -89,8 +89,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 0.5rem;
     color: var(--text-secondary);
     font-size: 0.875rem;
@@ -99,9 +99,10 @@
 }
 
 .page-number:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--bg-card);
     color: var(--text-primary);
     transform: translateY(-1px);
+    border-color: var(--accent-primary);
 }
 
 .page-number.active {
