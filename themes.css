@@ -289,3 +289,26 @@
 [data-theme="light"] ::-webkit-scrollbar-thumb:hover {
     background: var(--text-secondary);
 }
+
+/* Chart Styles */
+.chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .chart-card {
+    background: var(--bg-card);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.chart-card .control-select {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+[data-theme="light"] .chart-card .control-select {
+    background: var(--bg-secondary);
+}

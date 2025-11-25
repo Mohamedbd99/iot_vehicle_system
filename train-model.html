@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train ML Model - IoT Vehicle System</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="themes.css">
+    <script src="theme-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <main class="main-content" style="max-width: 800px; margin: 0 auto; padding: 2rem;">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-brain"></i> Train ML Model</h2>
+                </div>
+                <div style="padding: 1rem;">
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                        This will train the neural network model once with the Kaggle dataset and save it.
+                        After training, you can remove the dataset - the model will be saved and loaded automatically.
+                    </p>
+                    
+                    <div id="status" style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-secondary); border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                        <p style="margin: 0; color: var(--text-secondary);">Ready to train. Click the button below.</p>
+                    </div>
+                    
+                    <button id="trainBtn" class="page-btn" style="width: 100%; padding: 1rem; font-size: 1rem;">
+                        <i class="fa-solid fa-play"></i> Start Training
+                    </button>
+                    
+                    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                        <h3 style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Instructions:</h3>
+                        <ol style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.8;">
+                            <li>Make sure <code>us_accidents_sample.json</code> is in the project folder</li>
+                            <li>Click "Start Training" - this may take a few minutes</li>
+                            <li>Wait for "Model saved successfully" message</li>
+                            <li>You can now remove the dataset file - the model is saved!</li>
+                            <li>The main app (index.html) will automatically load the trained model</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script type="module">
+        import { trainModel } from './train-model.js';
+        
+        const trainBtn = document.getElementById('trainBtn');
+        const statusDiv = document.getElementById('status');
+        
+        trainBtn.addEventListener('click', async () => {
+            trainBtn.disabled = true;
+            trainBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Training...';
+            statusDiv.innerHTML = '<p style="margin: 0; color: var(--info);"><i class="fa-solid fa-spinner fa-spin"></i> Training model... This may take a few minutes.</p>';
+            
+            try {
+                const success = await trainModel();
+                
+                if (success) {
+                    statusDiv.innerHTML = '<p style="margin: 0; color: var(--success);"><i class="fa-solid fa-check-circle"></i> <strong>Model trained and saved successfully!</strong><br>You can now remove the dataset file. The model will be loaded automatically in the main app.</p>';
+                    trainBtn.innerHTML = '<i class="fa-solid fa-check"></i> Training Complete';
+                } else {
+                    statusDiv.innerHTML = '<p style="margin: 0; color: var(--danger);"><i class="fa-solid fa-exclamation-triangle"></i> Training completed but there was an error saving the model.</p>';
+                    trainBtn.disabled = false;
+                    trainBtn.innerHTML = '<i class="fa-solid fa-play"></i> Try Again';
+                }
+            } catch (error) {
+                console.error('Training error:', error);
+                statusDiv.innerHTML = `<p style="margin: 0; color: var(--danger);"><i class="fa-solid fa-exclamation-triangle"></i> Error: ${error.message}</p>`;
+                trainBtn.disabled = false;
+                trainBtn.innerHTML = '<i class="fa-solid fa-play"></i> Try Again';
+            }
+        });
+    </script>
+</body>
+</html>
+

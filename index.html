@@ -127,7 +127,7 @@
                 <!-- Statistics Panel -->
                 <div class="card stats-card">
                     <div class="card-header">
-                        <h3><i class="fa-solid fa-chart-pie"></i> Session Stats</h3>
+                        <h3><i class="fa-solid fa-chart-pie"></i> Complete Statistics</h3>
                     </div>
                     <div class="stats-grid">
                         <div class="stat-item">
@@ -143,9 +143,47 @@
                             <span class="stat-value" id="riskScore">--</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Incidents</span>
+                            <span class="stat-label">Total Incidents</span>
                             <span class="stat-value" id="incidentCount">0</span>
                         </div>
+                    </div>
+           
+                </div>
+
+                <!-- Evolution Charts -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-chart-line"></i> Evolution of Conditions</h3>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <select id="chartTimeRange" class="control-select" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                <option value="1h">Last 1h</option>
+                                <option value="6h">Last 6h</option>
+                                <option value="12h">Last 12h</option>
+                                <option value="24h">Last 24h</option>
+                                <option value="all">All Time</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="padding: 1rem;">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-droplet"></i> Humidity Evolution</h3>
+                    </div>
+                    <div style="padding: 1rem;">
+                        <canvas id="humidityChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-triangle-exclamation"></i> Risk Score Evolution</h3>
+                    </div>
+                    <div style="padding: 1rem;">
+                        <canvas id="riskChart"></canvas>
                     </div>
                 </div>
 
@@ -182,6 +220,8 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <!-- TensorFlow.js -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <!-- Main App -->
     <script type="module" src="app.js"></script>
 </body>

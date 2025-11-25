@@ -7,7 +7,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "simulator": "node simulator.js",
-    "start": "node simulator.js"
+    "start": "node simulator.js",
+    "convert": "node convert_dataset.js"
+
   },
   "repository": {
     "type": "git",
@@ -21,6 +23,7 @@
   },
   "homepage": "https://github.com/Mohamedbd99/iot_vehicle_system#readme",
   "dependencies": {
+    "csv-parse": "^5.6.0",
     "firebase": "^12.6.0",
     "node-fetch": "^3.3.2"
   }

@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Model Debug - Danger Zones Analysis</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #60a5fa;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+        }
+        
+        .card h2 {
+            color: #60a5fa;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .stat:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #94a3b8;
+        }
+        
+        .stat-value {
+            color: #e2e8f0;
+            font-weight: bold;
+        }
+        
+        .zones-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .zone-item {
+            background: #0f172a;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .zone-item.medium {
+            border-left-color: #f59e0b;
+        }
+        
+        .zone-item.low {
+            border-left-color: #10b981;
+        }
+        
+        .zone-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .zone-coords {
+            color: #94a3b8;
+            font-size: 0.9em;
+        }
+        
+        .zone-risk {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .zone-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            font-size: 0.9em;
+            color: #94a3b8;
+        }
+        
+        #map {
+            height: 500px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px 5px;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .log {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .suggestions {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .suggestions h3 {
+            color: #60a5fa;
+            margin-bottom: 10px;
+        }
+        
+        .suggestions ul {
+            margin-left: 20px;
+            color: #94a3b8;
+        }
+        
+        .suggestions li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fa-solid fa-bug"></i> ML Model Debug - Danger Zones Analysis</h1>
+        
+        <div style="margin-bottom: 20px;">
+            <button class="btn" onclick="analyzeModel()">
+                <i class="fa-solid fa-play"></i> Analyze Model
+            </button>
+            <button class="btn" onclick="exportData()">
+                <i class="fa-solid fa-download"></i> Export Analysis
+            </button>
+            <button class="btn btn-danger" onclick="clearModel()">
+                <i class="fa-solid fa-trash"></i> Clear Model (Retrain)
+            </button>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <h2><i class="fa-solid fa-chart-line"></i> Model Statistics</h2>
+                <div id="modelStats">
+                    <div class="stat">
+                        <span class="stat-label">Status:</span>
+                        <span class="stat-value" id="modelStatus">Not loaded</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fa-solid fa-database"></i> Data Statistics</h2>
+                <div id="dataStats">
+                    <div class="stat">
+                        <span class="stat-label">Accident Zones:</span>
+                        <span class="stat-value" id="zoneCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2><i class="fa-solid fa-triangle-exclamation"></i> Identified Danger Zones</h2>
+            <div id="zonesList" class="zones-list">
+                <p style="color: #94a3b8; text-align: center; padding: 20px;">Click "Analyze Model" to see danger zones</p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2><i class="fa-solid fa-map"></i> Danger Zones Map</h2>
+            <div id="map"></div>
+        </div>
+        
+        <div class="card">
+            <h2><i class="fa-solid fa-terminal"></i> Debug Log</h2>
+            <div id="debugLog" class="log">Waiting for analysis...</div>
+        </div>
+        
+        <div class="suggestions">
+            <h3><i class="fa-solid fa-lightbulb"></i> Improvement Suggestions</h3>
+            <ul id="suggestions">
+                <li>Run analysis to see suggestions</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, get, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyAvXRpYIdckVFKeRQ9m2wr7JRDyFlLPAMY",
+            authDomain: "iot-pro-35cd1.firebaseapp.com",
+            databaseURL: "https://iot-pro-35cd1-default-rtdb.firebaseio.com",
+            projectId: "iot-pro-35cd1",
+            storageBucket: "iot-pro-35cd1.firebasestorage.app",
+            messagingSenderId: "616038775289",
+            appId: "1:616038775289:web:fb268b27f656377fcb6528",
+            measurementId: "G-J6B47C11SZ"
+        };
+        
+        const app = initializeApp(FIREBASE_CONFIG);
+        const db = getDatabase(app);
+        
+        let model = null;
+        let accidentsByZone = new Map();
+        let debugMap = null;
+        let analysisData = null;
+        
+        // Initialize map
+        function initMap() {
+            debugMap = L.map('map').setView([40.7128, -74.0060], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(debugMap);
+        }
+        
+        initMap();
+        
+        // Load model and data
+        async function loadModelAndData() {
+            const log = document.getElementById('debugLog');
+            log.textContent = 'Loading model and data...\n';
+            
+            // Load model
+            try {
+                model = await tf.loadLayersModel('indexeddb://risk-prediction-model');
+                log.textContent += '✅ Model loaded from IndexedDB\n';
+                document.getElementById('modelStatus').textContent = 'Loaded';
+            } catch (error) {
+                log.textContent += '❌ Model not found in IndexedDB\n';
+                document.getElementById('modelStatus').textContent = 'Not found';
+                return false;
+            }
+            
+            // Load accident zones
+            const savedZones = localStorage.getItem('accidentZones');
+            if (savedZones) {
+                try {
+                    const zonesArray = JSON.parse(savedZones);
+                    accidentsByZone = new Map(zonesArray);
+                    log.textContent += `✅ Loaded ${accidentsByZone.size} accident zones from localStorage\n`;
+                    document.getElementById('zoneCount').textContent = accidentsByZone.size;
+                } catch (error) {
+                    log.textContent += `❌ Error loading zones: ${error.message}\n`;
+                }
+            } else {
+                // Try to load from JSON file
+                try {
+                    const response = await fetch('us_accidents_sample.json');
+                    if (response.ok) {
+                        const data = await response.json();
+                        processAccidentsData(data);
+                        log.textContent += `✅ Loaded ${data.length} accidents from JSON file\n`;
+                    }
+                } catch (error) {
+                    log.textContent += `❌ Could not load accident data: ${error.message}\n`;
+                }
+            }
+            
+            return true;
+        }
+        
+        function processAccidentsData(accidents) {
+            accidentsByZone.clear();
+            accidents.forEach(accident => {
+                const lat = parseFloat(accident.Start_Lat);
+                const lng = parseFloat(accident.Start_Lng);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    const zoneLat = Math.round(lat * 100) / 100;
+                    const zoneLon = Math.round(lng * 100) / 100;
+                    const zoneKey = `${zoneLat.toFixed(2)},${zoneLon.toFixed(2)}`;
+                    const severity = parseInt(accident.Severity) || 1;
+                    const weight = severity;
+                    accidentsByZone.set(zoneKey, (accidentsByZone.get(zoneKey) || 0) + weight);
+                }
+            });
+        }
+        
+        function getAccidentRiskRaw(lat, lon) {
+            if (!accidentsByZone || accidentsByZone.size === 0) return 0;
+            const zoneLat = Math.round(lat * 100) / 100;
+            const zoneLon = Math.round(lon * 100) / 100;
+            const zoneKey = `${zoneLat.toFixed(2)},${zoneLon.toFixed(2)}`;
+            const accidentCount = accidentsByZone.get(zoneKey) || 0;
+            if (accidentCount === 0) return 0;
+            const maxCount = Math.max(...Array.from(accidentsByZone.values()), 1);
+            return Math.min(accidentCount / maxCount, 1.0);
+        }
+        
+        async function predictRisk(temp, hum, lat, lon) {
+            if (!model) return 0;
+            const accidentRisk = (lat !== null && lon !== null) ? getAccidentRiskRaw(lat, lon) : 0;
+            const input = tf.tensor2d([[temp / 100, hum / 100, accidentRisk]]);
+            const prediction = model.predict(input);
+            const riskVal = (await prediction.data())[0];
+            input.dispose();
+            prediction.dispose();
+            return riskVal;
+        }
+        
+        // Main analysis function
+        async function analyzeModel() {
+            const log = document.getElementById('debugLog');
+            log.textContent = 'Starting analysis...\n';
+            
+            if (!await loadModelAndData()) {
+                log.textContent += '❌ Cannot analyze: Model or data missing\n';
+                return;
+            }
+            
+            log.textContent += `\n📊 Analyzing ${accidentsByZone.size} zones...\n`;
+            
+            const allZoneRisks = [];
+            const zonesArray = Array.from(accidentsByZone.entries());
+            const sampleSize = Math.min(500, zonesArray.length);
+            
+            log.textContent += `Evaluating ${sampleSize} zones with model...\n`;
+            
+            // Evaluate zones
+            for (let i = 0; i < sampleSize; i++) {
+                const [zoneKey, accidentCount] = zonesArray[i];
+                const [lat, lon] = zoneKey.split(',').map(Number);
+                
+                const avgTemp = 25;
+                const avgHum = 50;
+                const accidentRisk = getAccidentRiskRaw(lat, lon);
+                const predictedRisk = await predictRisk(avgTemp, avgHum, lat, lon);
+                
+                allZoneRisks.push({
+                    zoneKey,
+                    lat,
+                    lon,
+                    risk: predictedRisk,
+                    accidentCount,
+                    accidentRisk,
+                    temp: avgTemp,
+                    hum: avgHum
+                });
+                
+                if ((i + 1) % 50 === 0) {
+                    log.textContent += `  Processed ${i + 1}/${sampleSize} zones...\n`;
+                }
+            }
+            
+            // Sort by risk
+            allZoneRisks.sort((a, b) => b.risk - a.risk);
+            
+            // Statistics
+            const maxRisk = Math.max(...allZoneRisks.map(z => z.risk));
+            const minRisk = Math.min(...allZoneRisks.map(z => z.risk));
+            const avgRisk = allZoneRisks.reduce((sum, z) => sum + z.risk, 0) / allZoneRisks.length;
+            const medianRisk = allZoneRisks[Math.floor(allZoneRisks.length / 2)].risk;
+            
+            // Update stats
+            document.getElementById('modelStats').innerHTML = `
+                <div class="stat">
+                    <span class="stat-label">Model Status:</span>
+                    <span class="stat-value" style="color: #10b981;">✅ Loaded</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Zones Evaluated:</span>
+                    <span class="stat-value">${allZoneRisks.length}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Max Risk:</span>
+                    <span class="stat-value" style="color: #ef4444;">${(maxRisk * 100).toFixed(2)}%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Min Risk:</span>
+                    <span class="stat-value" style="color: #10b981;">${(minRisk * 100).toFixed(2)}%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Avg Risk:</span>
+                    <span class="stat-value">${(avgRisk * 100).toFixed(2)}%</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Median Risk:</span>
+                    <span class="stat-value">${(medianRisk * 100).toFixed(2)}%</span>
+                </div>
+            `;
+            
+            document.getElementById('dataStats').innerHTML = `
+                <div class="stat">
+                    <span class="stat-label">Total Zones:</span>
+                    <span class="stat-value">${accidentsByZone.size}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Zones with Accidents:</span>
+                    <span class="stat-value">${allZoneRisks.filter(z => z.accidentCount > 0).length}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Max Accidents/Zone:</span>
+                    <span class="stat-value">${Math.max(...allZoneRisks.map(z => z.accidentCount))}</span>
+                </div>
+            `;
+            
+            // Use SAME logic as app.js for consistency
+            // Get current vehicle position (if available from history or default)
+            let vehicleLat = null, vehicleLon = null;
+            
+            // Try to get vehicle position from localStorage or use a default
+            try {
+                const historyRef = ref(db, 'vehicle_history');
+                const snapshot = await get(query(historyRef, limitToLast(1)));
+                if (snapshot.exists()) {
+                    const latest = Object.values(snapshot.val())[0];
+                    vehicleLat = parseFloat(latest.latitude);
+                    vehicleLon = parseFloat(latest.longitude);
+                }
+            } catch (e) {
+                // Use default position (NYC area)
+                vehicleLat = 40.7128;
+                vehicleLon = -74.0060;
+            }
+            
+            // Calculate distance and proximity boost (SAME as app.js)
+            if (vehicleLat && vehicleLon) {
+                allZoneRisks.forEach(zone => {
+                    const latDiff = zone.lat - vehicleLat;
+                    const lonDiff = zone.lon - vehicleLon;
+                    const distanceKm = Math.sqrt(latDiff * latDiff + lonDiff * lonDiff) * 111;
+                    zone.distanceKm = distanceKm;
+                    // Boost risk for nearby zones (within 50km) - SAME as app.js
+                    if (distanceKm < 50) {
+                        zone.proximityBoost = Math.max(0, (50 - distanceKm) / 50) * 0.3;
+                        zone.adjustedRisk = Math.min(1.0, zone.risk + zone.proximityBoost);
+                    } else {
+                        zone.proximityBoost = 0;
+                        zone.adjustedRisk = zone.risk;
+                    }
+                });
+                
+                // Sort by adjusted risk (SAME as app.js)
+                allZoneRisks.sort((a, b) => b.adjustedRisk - a.adjustedRisk);
+                log.textContent += `🚗 Vehicle position: ${vehicleLat.toFixed(4)}, ${vehicleLon.toFixed(4)}\n`;
+            }
+            
+            // Use SAME threshold logic as app.js
+            const top30Percent = Math.max(1, Math.floor(allZoneRisks.length * 0.30));
+            const thresholdRisk = allZoneRisks[top30Percent - 1]?.adjustedRisk || allZoneRisks[top30Percent - 1]?.risk || 0.2;
+            const finalThreshold = Math.max(thresholdRisk, 0.15); // SAME as app.js
+            
+            // Get high-risk zones using SAME logic as app.js
+            let highRiskZones = [];
+            
+            if (vehicleLat && vehicleLon) {
+                // Strategy: Mix of nearby zones and high-risk zones (SAME as app.js)
+                const nearbyZones = allZoneRisks
+                    .filter(zone => zone.distanceKm < 100 && zone.risk >= 0.1)
+                    .slice(0, 20);
+                
+                const topRiskZones = allZoneRisks
+                    .filter(zone => zone.adjustedRisk >= finalThreshold)
+                    .slice(0, 30);
+                
+                // Combine and deduplicate (SAME as app.js)
+                const zoneMap = new Map();
+                [...nearbyZones, ...topRiskZones].forEach(zone => {
+                    if (!zoneMap.has(zone.zoneKey) || zoneMap.get(zone.zoneKey).adjustedRisk < zone.adjustedRisk) {
+                        zoneMap.set(zone.zoneKey, zone);
+                    }
+                });
+                
+                highRiskZones = Array.from(zoneMap.values())
+                    .sort((a, b) => b.adjustedRisk - a.adjustedRisk)
+                    .slice(0, 40); // SAME as app.js
+            } else {
+                // No vehicle position: just take top risk zones (SAME as app.js)
+                highRiskZones = allZoneRisks
+                    .filter(zone => zone.risk >= finalThreshold)
+                    .slice(0, 40);
+            }
+            
+            // Fallback if no zones (SAME as app.js)
+            if (highRiskZones.length === 0 && allZoneRisks.length > 0) {
+                highRiskZones = allZoneRisks.slice(0, 30);
+            }
+            
+            const mediumRiskZones = allZoneRisks.filter(z => z.risk >= 0.2 && z.risk < 0.4);
+            
+            // Display zones (using same zones as app.js would show)
+            displayZones(highRiskZones);
+            
+            // Display on map
+            displayZonesOnMap(highRiskZones);
+            
+            // Generate suggestions
+            generateSuggestions(allZoneRisks, maxRisk, avgRisk, highRiskZones.length);
+            
+            // Store for export (using same zones as app.js)
+            analysisData = {
+                allZoneRisks,
+                stats: { maxRisk, minRisk, avgRisk, medianRisk },
+                highRiskZones, // Same zones that app.js would show
+                mediumRiskZones,
+                vehiclePosition: vehicleLat && vehicleLon ? { lat: vehicleLat, lon: vehicleLon } : null,
+                threshold: finalThreshold
+            };
+            
+            log.textContent += `\n✅ Analysis complete!\n`;
+            log.textContent += `   - High-risk zones (same logic as app.js): ${highRiskZones.length}\n`;
+            log.textContent += `   - Threshold used: ${(finalThreshold * 100).toFixed(1)}%\n`;
+            log.textContent += `   - Medium risk (20-40%): ${mediumRiskZones.length}\n`;
+            log.textContent += `\n💡 These zones match what you'll see in index.html!\n`;
+        }
+        
+        function displayZones(zones) {
+            const container = document.getElementById('zonesList');
+            container.innerHTML = '';
+            
+            if (zones.length === 0) {
+                container.innerHTML = '<p style="color: #94a3b8; text-align: center; padding: 20px;">No zones found. Check if model is trained.</p>';
+                return;
+            }
+            
+            zones.forEach((zone, index) => {
+                const item = document.createElement('div');
+                item.className = 'zone-item';
+                
+                // Use adjusted risk if available (same as app.js)
+                const displayRisk = zone.adjustedRisk || zone.risk;
+                
+                if (displayRisk >= 0.6) {
+                    item.className += ' high';
+                } else if (displayRisk >= 0.4) {
+                    item.className += ' medium';
+                } else {
+                    item.className += ' low';
+                }
+                
+                const riskColor = displayRisk > 0.7 ? '#ef4444' : displayRisk > 0.5 ? '#f59e0b' : '#10b981';
+                
+                let details = `
+                    <div>Accidents: ${zone.accidentCount.toFixed(0)}</div>
+                    <div>Accident Risk: ${(zone.accidentRisk * 100).toFixed(1)}%</div>
+                `;
+                
+                if (zone.distanceKm !== undefined) {
+                    details += `<div>Distance: ${zone.distanceKm.toFixed(1)}km</div>`;
+                } else {
+                    details += `<div>Coords: ${zone.lat.toFixed(4)}, ${zone.lon.toFixed(4)}</div>`;
+                }
+                
+                if (zone.proximityBoost > 0) {
+                    details += `<div style="color: #60a5fa;">Proximity Boost: +${(zone.proximityBoost * 100).toFixed(1)}%</div>`;
+                }
+                
+                item.innerHTML = `
+                    <div class="zone-header">
+                        <span><strong>#${index + 1}</strong> ${zone.zoneKey}</span>
+                        <span class="zone-risk" style="color: ${riskColor}">${(displayRisk * 100).toFixed(1)}%</span>
+                    </div>
+                    <div class="zone-details">
+                        ${details}
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+        
+        function displayZonesOnMap(zones) {
+            // Clear existing markers
+            debugMap.eachLayer(layer => {
+                if (layer instanceof L.Marker) {
+                    debugMap.removeLayer(layer);
+                }
+            });
+            
+            zones.forEach((zone, index) => {
+                // Use adjusted risk if available (same as app.js)
+                const displayRisk = zone.adjustedRisk || zone.risk;
+                const riskColor = displayRisk > 0.7 ? '#dc2626' : displayRisk > 0.5 ? '#f59e0b' : '#ef4444';
+                const icon = L.divIcon({
+                    className: 'accident-zone-icon',
+                    html: `<i class="fa-solid fa-triangle-exclamation" style="font-size: ${displayRisk > 0.7 ? '24' : '18'}px; color: ${riskColor};"></i>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                });
+                
+                let popupText = `
+                    <strong>Zone #${index + 1}</strong><br>
+                    Risk: ${(displayRisk * 100).toFixed(1)}%<br>
+                    Accidents: ${zone.accidentCount.toFixed(0)}<br>
+                    Coords: ${zone.lat.toFixed(4)}, ${zone.lon.toFixed(4)}
+                `;
+                
+                if (zone.distanceKm !== undefined) {
+                    popupText += `<br>Distance: ${zone.distanceKm.toFixed(1)}km`;
+                }
+                
+                if (zone.proximityBoost > 0) {
+                    popupText += `<br><span style="color: #60a5fa;">Proximity Boost: +${(zone.proximityBoost * 100).toFixed(1)}%</span>`;
+                }
+                
+                const marker = L.marker([zone.lat, zone.lon], { icon })
+                    .addTo(debugMap)
+                    .bindPopup(popupText);
+            });
+            
+            // Fit bounds to show all zones
+            if (zones.length > 0) {
+                const bounds = zones.map(z => [z.lat, z.lon]);
+                debugMap.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+        
+        function generateSuggestions(zones, maxRisk, avgRisk, highRiskCount) {
+            const suggestions = [];
+            
+            if (maxRisk < 0.5) {
+                suggestions.push('⚠️ Model predictions are too low. Consider retraining with more data or adjusting the model architecture.');
+            }
+            
+            if (highRiskCount < 5) {
+                suggestions.push('⚠️ Very few high-risk zones detected. Lower the threshold or retrain the model with more accident data.');
+            }
+            
+            if (avgRisk < 0.2) {
+                suggestions.push('⚠️ Average risk is very low. The model may be too conservative. Consider adjusting training data.');
+            }
+            
+            if (zones.filter(z => z.accidentCount > 0 && z.risk < 0.3).length > zones.length * 0.5) {
+                suggestions.push('⚠️ Many zones with accidents have low risk predictions. Model may not be learning accident patterns well.');
+            }
+            
+            const riskDistribution = {
+                high: zones.filter(z => z.risk >= 0.6).length,
+                medium: zones.filter(z => z.risk >= 0.3 && z.risk < 0.6).length,
+                low: zones.filter(z => z.risk < 0.3).length
+            };
+            
+            suggestions.push(`📊 Risk distribution: ${riskDistribution.high} high, ${riskDistribution.medium} medium, ${riskDistribution.low} low`);
+            
+            if (riskDistribution.high < riskDistribution.low * 0.1) {
+                suggestions.push('💡 Consider using a percentile-based threshold (top 10-20%) instead of absolute threshold.');
+            }
+            
+            suggestions.push('💡 Try adjusting proximity boost in app.js to prioritize zones near vehicle position.');
+            suggestions.push('💡 Consider using different temperature/humidity values for different zones (seasonal data).');
+            
+            document.getElementById('suggestions').innerHTML = suggestions.map(s => `<li>${s}</li>`).join('');
+        }
+        
+        function exportData() {
+            if (!analysisData) {
+                alert('Run analysis first!');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(analysisData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `model-analysis-${Date.now()}.json`;
+            a.click();
+        }
+        
+        async function clearModel() {
+            if (!confirm('Are you sure? This will delete the trained model and require retraining.')) {
+                return;
+            }
+            
+            try {
+                // Delete model from IndexedDB using direct IndexedDB API
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open('tensorflowjs', 1);
+                    
+                    request.onsuccess = (event) => {
+                        const db = event.target.result;
+                        const transaction = db.transaction(['models_store'], 'readwrite');
+                        const store = transaction.objectStore('models_store');
+                        
+                        // Delete all entries with keys starting with 'risk-prediction-model'
+                        const deleteRequest = store.openCursor();
+                        let deleted = 0;
+                        
+                        deleteRequest.onsuccess = (e) => {
+                            const cursor = e.target.result;
+                            if (cursor) {
+                                const key = cursor.key;
+                                // Check if key contains 'risk-prediction-model'
+                                if (typeof key === 'string' && key.includes('risk-prediction-model')) {
+                                    cursor.delete();
+                                    deleted++;
+                                }
+                                cursor.continue();
+                            } else {
+                                // Also try to delete by exact key
+                                const exactDelete = store.delete('risk-prediction-model');
+                                exactDelete.onsuccess = () => {
+                                    localStorage.removeItem('accidentZones');
+                                    db.close();
+                                    alert(`Model cleared! (${deleted} entries deleted) Retrain using train-model.html`);
+                                    resolve();
+                                };
+                                exactDelete.onerror = () => {
+                                    localStorage.removeItem('accidentZones');
+                                    db.close();
+                                    alert(`Model cleared! (${deleted} entries deleted) Retrain using train-model.html`);
+                                    resolve();
+                                };
+                            }
+                        };
+                        
+                        deleteRequest.onerror = () => {
+                            // Fallback: just clear localStorage
+                            localStorage.removeItem('accidentZones');
+                            alert('Model cleared from localStorage. You may need to clear browser data manually.');
+                            resolve();
+                        };
+                    };
+                    
+                    request.onerror = () => {
+                        // Fallback: just clear localStorage
+                        localStorage.removeItem('accidentZones');
+                        alert('Model cleared from localStorage. You may need to clear browser data manually.');
+                        resolve();
+                    };
+                });
+            } catch (error) {
+                console.error('Error clearing model:', error);
+                // Fallback: just clear localStorage
+                localStorage.removeItem('accidentZones');
+                alert('Model cleared from localStorage. You may need to clear browser data manually.');
+            }
+        }
+        
+        // Make functions global
+        window.analyzeModel = analyzeModel;
+        window.exportData = exportData;
+        window.clearModel = clearModel;
+        
+        // Auto-load on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadModelAndData();
+        });
+    </script>
+</body>
+</html>
+
